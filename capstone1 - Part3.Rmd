@@ -1,0 +1,61 @@
+---
+title: "Capstone - Final Part3"
+author: "sdey"
+date: "25 November 2018"
+output: html_document
+---
+
+```{r}
+# Load libraries, break large data frame into separate NGram dataframes
+library(data.table)
+library(tm)
+library(stylo)
+library(RWeka)
+library(dplyr)
+library(stringr)
+
+rm(list = ls())
+load("sdey16_1gram.RData")
+load("sdey16_2gram.RData")
+load("sdey16_3gram.RData")
+load("sdey16_4gram.RData")
+
+
+word <- as.character(onegram_freq_table$ngram_word)
+freq <- as.integer(onegram_freq_table$Frequency)
+data1gram <- data.frame(word,freq)
+data1gram <- data1gram[data1gram$freq>10,]
+
+
+word <- as.character(twogram_freq_table$ngram_word)
+freq <- as.integer(twogram_freq_table$Frequency)
+data2gram <- data.frame(word,freq)
+data2gram <- data2gram[data2gram$freq>10,]
+
+
+
+word <- as.character(threegram_freq_table$ngram_word)
+freq <- as.integer(threegram_freq_table$Frequency)
+data3gram <- data.frame(word,freq)
+data3gram <- data3gram[data3gram$freq>25,]
+
+
+word <- as.character(fourgram_freq_table$ngram_word)
+freq <- as.integer(fourgram_freq_table$Frequency)
+data4gram <- data.frame(word,freq)
+data4gram <- data4gram[data4gram$freq>30,]
+
+#save(data1gram,data2gram,data3gram,data4gram,file = "dataNgramsFreqTable.RData")
+dataNGram <- rbind(data1gram,data2gram,data3gram,data4gram)
+write.table(dataNGram, file = "Ngrm.txt", sep = "\t", row.names = FALSE)
+
+g1index <- c(1,nrow(data1gram))
+g2index <- c(g1index[2]+1, g1index[2]+nrow(data2gram))
+g3index <- c(g2index[2]+1, g2index[2]+nrow(data3gram))
+g4index <- c(g3index[2]+1, g3index[2]+nrow(data4gram))
+
+save(g1index,g2index,g3index,g4index,file = "index.RData")
+
+
+```
+

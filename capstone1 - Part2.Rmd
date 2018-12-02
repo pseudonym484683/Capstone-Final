@@ -1,0 +1,127 @@
+---
+title: "Capstone - Final Part1"
+author: "sdey"
+date: "25 November 2018"
+output: html_document
+---
+#Data Analysis
+
+The data can be downloaded from https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip
+
+1. Read the three english file of twitter, blogs and news.
+2. Basic analysis of 3 files.Count the Lines and words.
+2. take 1% of sample from each file. Join the three sample file and make main corpus.
+3. Data cleaning and filtering done on main corpus.
+
+```{r, warning=FALSE}
+
+# Adding Libraries.
+
+library(stringi)
+library(ggplot2)
+library(magrittr)
+library(markdown)
+library(RWeka)
+library(openNLP)
+library(wordcloud)
+library(ngram)
+library(slam)
+library(tm)
+library(NLP)
+library(qdap)
+library(SnowballC)
+
+
+#1-Gram Plot
+
+
+load("sdey16_1gramDM.RData")
+onegramtermdocmatrix_rollup <- rollup(onegramtermdocmatrix, 2, na.rm=TRUE, FUN = sum)
+onegram_freq <- sort(rowSums(as.matrix(onegramtermdocmatrix_rollup)), decreasing = TRUE)
+onegram_freq_table <- data.frame(ngram_word = names(onegram_freq), Frequency = onegram_freq)
+#onegram_freq_table <- filter(onegram_freq_table, onegram_freq_table$Frequency != 1)
+
+onegrm_plot <- ggplot(onegram_freq_table[1:40, ], aes(reorder(ngram_word, -Frequency), Frequency))+
+  geom_bar(stat = "identity" , col ="black", fill = "yellow")+
+  ggtitle("High Freq. top 40 1-gram words")+
+  xlab("1-gram words")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1), plot.title = element_text(hjust = 0.5))
+onegrm_plot
+save(onegram_freq_table, file = "sdey16_1gram.RData")
+#rm(list = ls())
+
+
+```
+
+
+#2-Gram Plot
+```{r}
+
+
+load("sdey16_2gramDM.RData")
+twogramtermdocmatrix_rollup <- rollup(twogramtermdocmatrix, 2, na.rm=TRUE, FUN = sum)
+twogram_freq <- sort(rowSums(as.matrix(twogramtermdocmatrix_rollup)), decreasing = TRUE)
+twogram_freq_table <- data.frame(ngram_word = names(twogram_freq), Frequency = twogram_freq)
+#twogram_freq_table <- filter(twogram_freq_table, Frequency != 1)
+
+twogrm_plot <- ggplot(twogram_freq_table[1:40, ], aes(reorder(ngram_word, -Frequency), Frequency))+
+  geom_bar(stat = "identity" , col ="black", fill = "green")+
+  ggtitle("High Freq. top 40 2-gram words")+
+  xlab("2-gram words")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1), plot.title = element_text(hjust = 0.5))
+twogrm_plot
+save(twogram_freq_table, file = "sdey16_2gram.RData")
+rm(list = ls())
+```
+
+#3-Gram Plot
+```{r}
+
+load("sdey16_3gramDM.RData")
+threegramtermdocmatrix_rollup <- rollup(threegramtermdocmatrix, 2, na.rm=TRUE, FUN = sum)
+threegram_freq <- sort(rowSums(as.matrix(threegramtermdocmatrix_rollup)), decreasing = TRUE)
+threegram_freq_table <- data.frame(ngram_word = names(threegram_freq), Frequency = threegram_freq)
+#threegram_freq_table <- filter(threegram_freq_table, Frequency != 1)
+
+threegrm_plot <- ggplot(threegram_freq_table[1:40, ], aes(reorder(ngram_word, -Frequency), Frequency))+
+  geom_bar(stat = "identity" , col ="black", fill = "blue")+
+  ggtitle("High Freq. top 40 3-gram words")+
+  xlab("3-gram words")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1), plot.title = element_text(hjust = 0.5))
+threegrm_plot
+
+save(threegram_freq_table, file = "sdey16_3gram.RData")
+rm(list = ls())
+```
+
+
+#4-Gram Plot
+```{r}
+
+load("sdey16_4gramDM.RData")
+fourgramtermdocmatrix_rollup <- rollup(fourgramtermdocmatrix, 2, na.rm=TRUE, FUN = sum)
+fourgram_freq <- sort(rowSums(as.matrix(fourgramtermdocmatrix_rollup)), decreasing = TRUE)
+fourgram_freq_table <- data.frame(ngram_word = names(fourgram_freq), Frequency = fourgram_freq)
+#threegram_freq_table <- filter(threegram_freq_table, Frequency != 1)
+
+fourgrm_plot <- ggplot(fourgram_freq_table[1:40, ], aes(reorder(ngram_word, -Frequency), Frequency))+
+  geom_bar(stat = "identity" , col ="black", fill = "red")+
+  ggtitle("High Freq. top 40 3-gram words")+
+  xlab("4-gram words")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1), plot.title = element_text(hjust = 0.5))
+fourgrm_plot
+
+save(fourgram_freq_table, file = "sdey16_4gram.RData")
+rm(list = ls())
+```
+
+
+
+```
+
+#Conclusions
+
+1. We can found from 1 gram that which words are used more frequently.
+2. For those single word we can predict the next word from two gram. Only two suggest highest frequent two gram combination . Also, for each combination we can suggest next word from 3 gram.
+3. More gram like 4 gram 5 gram can help us to suggest more but complexity of the prongram will be increased.
+4. Sampling can be increased with higher memory and suggestion will be more accurate.

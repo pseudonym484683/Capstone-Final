@@ -1,0 +1,193 @@
+---
+title: "Capstone - Final Part1"
+author: "sdey"
+date: "25 November 2018"
+output: html_document
+---
+#Data Analysis
+
+The data can be downloaded from https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip
+
+1. Read the three english file of twitter, blogs and news.
+2. Basic analysis of 3 files.Count the Lines and words.
+2. take 1% of sample from each file. Join the three sample file and make main corpus.
+3. Data cleaning and filtering done on main corpus.
+
+```{r, warning=FALSE}
+
+# Adding Libraries.
+
+library(stringi)
+library(ggplot2)
+library(magrittr)
+library(markdown)
+library(RWeka)
+library(openNLP)
+library(wordcloud)
+library(ngram)
+library(slam)
+library(tm)
+library(NLP)
+library(qdap)
+library(SnowballC)
+
+#Read input file.
+con_twit <- file("./en_us/en_US.twitter.txt", "r") 
+con_news <- file("./en_us/en_US.news.txt", "r") 
+con_blogs <- file("./en_us/en_US.blogs.txt", "r") 
+
+#Read Lines from Input File.
+twit_data <- readLines(con_twit,skipNul = TRUE)
+linecount_twit <- length(twit_data)
+wordcount_twitter <- sum(stri_count_words(twit_data))
+news_data <- readLines(con_news,skipNul = TRUE)
+wordcount_news <- sum(stri_count_words(news_data))
+linecount_news <- length(news_data)
+blogs_data <- readLines(con_blogs,skipNul = TRUE)
+linecount_blogs <- length(blogs_data)
+wordcount_blogs <- sum(stri_count_words(blogs_data))
+
+summary_english <- data.frame(file=  c("twitter","news","blog"), linecount = c (linecount_twit,linecount_news,linecount_blogs),wordcount = c(wordcount_twitter,wordcount_news,wordcount_blogs))
+
+summary_english
+
+# Take 1 %  Data Sample of each
+sample_size <- 0.1
+sample_src_twit <- sample(twit_data,linecount_twit * sample_size)
+sample_src_news <- sample(news_data,linecount_news * sample_size)
+sample_src_blogs <- sample(blogs_data,linecount_blogs * sample_size)
+close(con_news)
+close(con_blogs)
+close(con_twit)
+
+ # Build the main corpus
+
+sample_src <- paste(sample_src_twit, sample_src_news, sample_src_blogs )
+
+corpus <- VCorpus(VectorSource(sample_src))
+inspect(corpus[1:5])
+
+
+removeAt <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+             # Remove @
+             corpusFilter1 <- tm_map(corpus, removeAt, "@")
+             
+             
+             
+             # Make lower case
+             corpusFilter2 <- tm_map(corpusFilter1, content_transformer(tolower))
+             # Remove Numbers
+             corpusFilter3 <- tm_map(corpusFilter2, content_transformer(removeNumbers))
+             # Remove Common stopwords such as "the"
+             corpusFilter4 <- tm_map(corpusFilter3, removeWords, stopwords("english"))
+             # Remove Punctuation
+             corpusFilter5 <- tm_map(corpusFilter4 ,content_transformer(removePunctuation))
+             # Trim unnessesary space
+             corpusFilter6 <- tm_map(corpusFilter5, content_transformer(stripWhitespace))
+             
+# Release utilized memory of unused variables and garmage collection.
+save(corpusFilter6, file = "sdey16_corpus.RData")
+                          
+rm(a)
+rm(corpusFilter1, corpusFilter2, corpusFilter3, corpusFilter4, corpusFilter5)
+rm(corpus,news_data,blogs_data,twit_data)
+gc()
+
+
+```
+#Plotting the data
+
+After creating the data sample we have clean the data and create the main files.Data plot have been done in below steps.
+
+1. Creating token for single word , two words and three words.
+2. Creation of term document matrix for single words , two words and three words.Term doument matrix is separate the entire data into single word , two word or three word as per token is supplied.
+3. Sort the entire term matrix into data frame as per words (or word tupple) frequencies.
+4. Plot the bar chart of 1-gram, 1-gram and 3-gram.
+5. Plot the wordcloud using wordclud function for better visiblility.
+
+
+#1-Gram Plot
+```{r}
+
+load("sdey16_corpus.RData")
+
+onegramtoken <- function(x) NGramTokenizer(x, Weka_control(min = 1, max = 1))
+
+onegramtermdocmatrix <- TermDocumentMatrix(corpusFilter6,control = list(tokenize = onegramtoken))
+
+#onegramtermdocmatrix_sparsed <- removeSparseTerms(onegramtermdocmatrix, 0.999)
+save(onegramtermdocmatrix, file = "sdey16_1gramDM.RData")
+
+
+
+```
+
+
+#2-Gram Plot
+```{r}
+
+load("sdey16_corpus.RData")
+
+twogramtoken <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
+twogramtermdocmatrix <- TermDocumentMatrix(corpusFilter6,control = list(tokenize = twogramtoken))
+
+#twogramtermdocmatrix_sparsed <- removeSparseTerms(twogramtermdocmatrix, 0.999)
+save(twogramtermdocmatrix, file = "sdey16_2gramDM.RData")
+
+```
+
+#3-Gram Plot
+```{r}
+library(stringi)
+library(ggplot2)
+library(magrittr)
+library(markdown)
+library(RWeka)
+library(openNLP)
+library(wordcloud)
+library(ngram)
+library(slam)
+library(tm)
+library(NLP)
+library(qdap)
+library(SnowballC)
+load("sdey16_corpus.RData")
+
+threegramtoken <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
+threegramtermdocmatrix <- TermDocumentMatrix(corpusFilter6,control = list(tokenize = threegramtoken))
+
+#threegramtermdocmatrix_sparsed <- removeSparseTerms(threegramtermdocmatrix, 0.999)
+save(threegramtermdocmatrix, file = "sdey16_3gramDM.RData")
+```
+
+```{r}
+library(stringi)
+library(ggplot2)
+library(magrittr)
+library(markdown)
+library(RWeka)
+library(openNLP)
+library(wordcloud)
+library(ngram)
+library(slam)
+library(tm)
+library(NLP)
+library(qdap)
+library(SnowballC)
+load("sdey16_corpus.RData")
+
+fourgramtoken <- function(x) NGramTokenizer(x, Weka_control(min = 4, max = 4))
+fourgramtermdocmatrix <- TermDocumentMatrix(corpusFilter6,control = list(tokenize = fourgramtoken))
+
+#threegramtermdocmatrix_sparsed <- removeSparseTerms(threegramtermdocmatrix, 0.999)
+save(fourgramtermdocmatrix, file = "sdey16_4gramDM.RData")
+```
+
+```
+
+#Conclusions
+
+1. We can found from 1 gram that which words are used more frequently.
+2. For those single word we can predict the next word from two gram. Only two suggest highest frequent two gram combination . Also, for each combination we can suggest next word from 3 gram.
+3. More gram like 4 gram 5 gram can help us to suggest more but complexity of the prongram will be increased.
+4. Sampling can be increased with higher memory and suggestion will be more accurate.
